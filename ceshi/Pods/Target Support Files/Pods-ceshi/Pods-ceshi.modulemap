@@ -1,0 +1,6 @@
+framework module Pods_ceshi {
+  umbrella header "Pods-ceshi-umbrella.h"
+
+  export *
+  module * { export * }
+}
