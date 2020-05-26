@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// 所有数据中的最大列
 /// @param data 数据源
 - (NSInteger) maxCol:(NSArray *)data;
+
+- (void) subItemsWithItem:(Item *)item data:(NSArray <Item *>*) data;
 @end
 
 NS_ASSUME_NONNULL_END

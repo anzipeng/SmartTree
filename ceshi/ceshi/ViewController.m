@@ -91,6 +91,9 @@ int idNum = 0;
 - (IBAction)jian:(id)sender {
     [self.manager deleteChild:self.currentItem data:self.dataArray];
 }
+- (IBAction)allChilds:(id)sender {
+    [self.manager subItemsWithItem:self.currentItem data:self.dataArray];
+}
 - (NSString *) getRandomName{
     NSArray *  a  = @[@"王",@"安",@"周",@"赵",@"钱",@"孙"];
     NSArray * b = @[@"古",@"木",@"山",@"和",@"水",@"钟",@"才",@"毛"];

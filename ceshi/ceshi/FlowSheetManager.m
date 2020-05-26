@@ -27,6 +27,7 @@
 - (void)appendNextChild:(Item *)appendItem data:(NSMutableArray <Item*>*)data tapItem:(Item *)item{
     BOOL hasChild = [self hasChild:item data:data];
     if (hasChild) {
+        // 在主分支上的节点
         NSInteger maxRowCurrent = [self maxRowWithItem:item data:data isCurrent:YES];
         if (maxRowCurrent == 1) {
             NSInteger maxRow = [self maxRow:data];
@@ -36,18 +37,38 @@
                 [data addObject:appendItem];
             
         } else {
-             NSInteger maxrow =  [self maxRowWithItem:item data:data isCurrent:NO];
-             // 移动行数大于或等于maxRow的数据
-             NSMutableArray <Item *>* tempA = [self itemsWithRowsEqualOrGrateThanRow:maxrow+1 data:data];
-             [data removeObjectsInArray:tempA];
-              for(int i = 0 ;i<tempA.count;i++){
-                tempA[i].row ++;
-              }
-              [data addObjectsFromArray:tempA];
-              //计算下一列的个数
-              appendItem.column = item.column+1;
-              appendItem.row = (int)maxrow+1;
-              [data addObject:appendItem];
+            NSInteger maxrow =  [self maxRowWithItem:item data:data isCurrent:NO];
+                               // 移动行数大于或等于maxRow的数据
+            NSMutableArray <Item *>* tempA = [self itemsWithRowsEqualOrGrateThanRow:maxrow+1 data:data];
+            [data removeObjectsInArray:tempA];
+            // 在子分支上的节点
+            Item * maxitem =  [self childMaxRow:item data:data];
+            if (maxitem) {
+                if ([self hasChild:maxitem data:data]) {
+                   
+                   for(int i = 0 ;i<tempA.count;i++){
+                        tempA[i].row = tempA[i].row+maxitem.row-item.row+1;
+                    }
+                
+                   // appendItem.column = item.column+1;
+                   appendItem.row = item.row+maxitem.row-item.row+2;
+                   // [data addObject:appendItem];
+                }else{
+                    
+                    for(int i = 0 ;i<tempA.count;i++){
+                            tempA[i].row ++;
+                    }
+                   
+                    appendItem.row = (int)maxrow+1;
+                   
+                }
+                [data addObjectsFromArray:tempA];
+                appendItem.column = item.column+1;
+                [data addObject:appendItem];
+               
+            }
+           
+            
             }
         }else{
               appendItem.row = item.row;
@@ -64,7 +85,7 @@
 /// @param data 数据源
 /// @param item 点击节点
 - (void)appendLastChild:(Item *)appendItem data:(NSMutableArray <Item*>*)data tapItem:(Item *)item{
-    [self.childs removeAllObjects];
+
 
     [self subItemsWithItem:item data:data];
     [data removeObjectsInArray:self.childs];
@@ -80,8 +101,6 @@
         items.column++;
         [data addObject:items];
     }
-   
-    
     if (self.delegate && [self.delegate respondsToSelector:@selector(flowSheetReloadView:)]) {
         [self.delegate flowSheetReloadView:data];
     }
@@ -99,7 +118,6 @@
             [data addObject:i];
         }
     }
-    [self.childs removeAllObjects];
     [self subItemsWithItem:item data:data];
     [data removeObjectsInArray:self.childs];
     [data removeObject:item];
@@ -122,6 +140,28 @@
     
 }
 
+/// 返回某节点的行数最大的节点
+/// @param item 当前节点
+/// @param data 数据源
+- (Item *)childMaxRow:(Item *)item data:(NSArray <Item *>*)data{
+    [self subItemsWithItem:item data:data];
+    for (Item  *i in self.childs) {
+        NSLog(@"---%@",i.approverName);
+    }
+    if (self.childs.count >0) {
+        Item * items = self.childs[0];
+        for (Item * item in self.childs) {
+            if (item.row >items.row) {
+                items = item;
+            }
+        }
+        return items;
+    }else{
+        return nil;
+    }
+    return nil;
+   
+}
 /// 子节点和父节点是否在一行
 /// @param item 当点节点
 /// @param data 数据源
@@ -156,27 +196,29 @@
     return NO;
 }
 
-/// *****核心代码***** 获取当前节点下的所有子节点
+/// *****核心代码***** 获取当前节点下的所有子节点包括兄弟节点
 /// @param item 当前节点
 /// @param data 数据源
 - (void) subItemsWithItem:(Item *)item data:(NSArray <Item *>*) data{
-        
-        for (int i = 0;i< data.count ; i++) {
-            if ([self hasChild:item data:data]) {
-                for (Item * ii in [self childsWithItem:item data:data]) {
-                     [self subItemsWithItem:ii data:data];
-                    if (![self.childs containsObject:ii]) {
-                        [self.childs addObject:ii];
-                    }
-                }
-            }
-            if (![self.childs containsObject:item]) {
-                    [self.childs addObject:item];
-            }
-            
-        }
+    [self.childs removeAllObjects];
+    [self subItem:item data:data];
 }
-
+- (void) subItem:(Item *)item data:(NSArray <Item *>*) data{
+    for (int i = 0;i< data.count ; i++) {
+              if ([self hasChild:item data:data]) {
+                  for (Item * ii in [self childsWithItem:item data:data]) {
+                       [self subItemsWithItem:ii data:data];
+                      if (![self.childs containsObject:ii]) {
+                          [self.childs addObject:ii];
+                      }
+                  }
+              }
+              if (![self.childs containsObject:item]) {
+                      [self.childs addObject:item];
+              }
+              
+          }
+}
 /// 获取当前节点的父节点
 /// @param item 当前节点
 /// @param data 数据源
